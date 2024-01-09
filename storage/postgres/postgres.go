@@ -11,6 +11,7 @@ import (
 type Store struct {
 	DB           *sql.DB
 	UsersStorage usersRepo
+	OrderStorage orderRepo
 }
 
 func New(con config.Config) (Store, error) {
@@ -22,9 +23,11 @@ func New(con config.Config) (Store, error) {
 	}
 
 	usersRepo := NewUserRepo(db)
+	orderRepo := NewOrderRepo(db)
 
 	return Store{
 		DB:           db,
 		UsersStorage: usersRepo,
+		OrderStorage: orderRepo,
 	}, nil
 }

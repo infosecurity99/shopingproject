@@ -37,3 +37,45 @@ func (r usersRepo) GetByIdUser(id uuid.UUID) (structfortable.Users, error) {
 	}
 	return user, nil
 }
+
+//getlist user
+
+func (r usersRepo) GetListUser() ([]structfortable.Users, error) {
+	users := []structfortable.Users{}
+	rows, err := r.DB.Query(`SELECT * FROM users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	user := structfortable.Users{}
+	for rows.Next() {
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Phone); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+//delete funct   for delete  user
+func (r usersRepo) Deleteusers(id uuid.UUID) error {
+
+	_, err := r.DB.Exec(`delete from users where id=$1`, id)
+	if err != nil {
+
+		return err
+	}
+	return nil
+}
+
+//update  user for iuser
+
+func (r usersRepo) UpdateUser(user structfortable.Users) error {
+	_, err := r.DB.Exec(`update users set firstname=$1 ,lastname=$2 ,email=$3, phone=$4, id=$5 `, user.FirstName, user.LastName, user.Email, user.Phone, user.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
