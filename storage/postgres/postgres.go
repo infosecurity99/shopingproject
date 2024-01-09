@@ -9,9 +9,11 @@ import (
 )
 
 type Store struct {
-	DB           *sql.DB
-	UsersStorage usersRepo
-	OrderStorage orderRepo
+	DB                  *sql.DB
+	UsersStorage        usersRepo
+	OrderStorage        orderRepo
+	ProductStorage      productRepo
+	OrderProductStorage orderproductRepo
 }
 
 func New(con config.Config) (Store, error) {
@@ -24,10 +26,14 @@ func New(con config.Config) (Store, error) {
 
 	usersRepo := NewUserRepo(db)
 	orderRepo := NewOrderRepo(db)
+	productRepo := NewProductRepo(db)
+	orderproductRepo := NewOrderProduct(db)
 
 	return Store{
-		DB:           db,
-		UsersStorage: usersRepo,
-		OrderStorage: orderRepo,
+		DB:                  db,
+		UsersStorage:        usersRepo,
+		OrderStorage:        orderRepo,
+		ProductStorage:      productRepo,
+		OrderProductStorage: orderproductRepo,
 	}, nil
 }
