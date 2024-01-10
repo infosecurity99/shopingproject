@@ -69,7 +69,7 @@ func (c Controler) UpdateUsers() {
 
 	fmt.Println("successful update this data ")
 }
-
+//selectall
 func GetInfoUsers() structfortable.Users {
 
 	var (
@@ -97,7 +97,7 @@ func GetInfoUsers() structfortable.Users {
 		Phone:     phone,
 	}
 }
-
+//getinfoforupdateusers
 func GetInfoUsersforUpdate() structfortable.Users {
 	var idStr string
 	fmt.Printf("enter id  for update")
