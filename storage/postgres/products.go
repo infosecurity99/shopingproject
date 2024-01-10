@@ -18,15 +18,15 @@ func NewProductRepo(db *sql.DB) productRepo {
 	}
 }
 
-func (r productRepo) CreateProductInsert(price int, name string) error {
+func (r productRepo) CreateProductInsert(products structfortable.Products) (string, error) {
 	id := uuid.New()
-	if _, err := r.DB.Exec(`insert into products values ($1, $2, $3)`, id, price, name); err != nil {
-		return err
+	if _, err := r.DB.Exec(`insert into products values ($1, $2, $3)`, id, products.Price, products.Name); err != nil {
+		return "", err
 	}
-	return nil
+	return id.String(), nil
 }
 
-func (c productRepo) GetByidProduct(id uuid.UUID) (structfortable.Products, error) {
+func (c productRepo) GetByidProduct(id string) (structfortable.Products, error) {
 	product := structfortable.Products{}
 	row := c.DB.QueryRow(`select *from products where id=$1`, id)
 
@@ -60,7 +60,7 @@ func (c productRepo) SelectProduct() ([]structfortable.Products, error) {
 	return products, nil
 }
 
-func (c productRepo) DeleteProduct(id uuid.UUID) error {
+func (c productRepo) DeleteProduct(id string) error {
 	_, err := c.DB.Exec(`delete from product where id=$1`, id)
 	if err != nil {
 		log.Fatal("erorr this is productRpository")

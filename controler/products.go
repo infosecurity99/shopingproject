@@ -2,97 +2,137 @@ package controler
 
 import (
 	"conectionmyprojectpath/structfortable"
+	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/google/uuid"
+	"net/http"
 )
 
-func (c Controler) CreateProduct() {
-
-	price := 0
-	fmt.Println("Enter amount: ")
-	fmt.Scan(&price)
-
-	var name string
-	fmt.Println("enter name")
-	fmt.Scan(&name)
-
-	if err := c.Store.ProductStorage.CreateProductInsert(price, name); err != nil {
-		log.Fatal("Error while insert product ", err.Error())
+func (c Controler) Products(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		c.CreateProducts(w, r)
+	case http.MethodGet:
+		values := r.URL.Query()
+		_, ok := values["id"]
+		if ok {
+			c.GetByIdProduct(w, r)
+		} else {
+			c.SelectProducts(w, r)
+		}
+	case http.MethodDelete:
+	     c.DeleteProduct(w, r)
+	case http.MethodPut:
+		c.UpdateProduct(w, r)
+	default:
+		fmt.Println("this is not case")
 	}
-	fmt.Println("product inserting succesfully...")
 }
 
-func (c Controler) GetByIdProduct() {
-	var idStr string
-	fmt.Println("enter idStr")
-	fmt.Scan(&idStr)
+func (c Controler) CreateProducts(w http.ResponseWriter, r *http.Request) {
 
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("error this is not reponse  get by id", err.Error())
+	products := structfortable.Products{}
+
+	if err := json.NewDecoder(r.Body).Decode(&products); err != nil {
+		fmt.Println([]byte(`this is while erroring newdecoder problame` + err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`this is suscces ` + err.Error()))
 		return
 	}
+
+	id, err := c.Store.ProductStorage.CreateProductInsert(products)
+	if err != nil {
+		log.Fatal("Error while insert product ", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is suscces ` + err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(`this is suces` + id))
+}
+
+func (c Controler) GetByIdProduct(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
 	product, err := c.Store.ProductStorage.GetByidProduct(id)
 
 	if err != nil {
 		log.Fatal("eror  this is cannot product", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is error ` + id))
 	}
 
-	fmt.Println(product)
-}
-
-func (c Controler) SelectProducts() {
-
-}
-
-func (c Controler) DeleteProduct() {
-
-	var idStr string
-	fmt.Println("enter idStr")
-	fmt.Scan(&idStr)
-
-	id, err := uuid.Parse(idStr)
-
+	js, err := json.Marshal(product)
 	if err != nil {
-		log.Fatal("error this is deleteproduct")
+		fmt.Println("THIS IS ERROR marshal")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`this is erro `))
+		return
 	}
-	c.Store.OrderStorage.DeleteOrder(id)
 
-	fmt.Println("successfukldekete product data")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(js)
 }
 
-func (c Controler) UpdateProduct() {
-	product := GetProductInfo()
+func (c Controler) SelectProducts(w http.ResponseWriter, r *http.Request) {
+	product, err := c.Store.ProductStorage.SelectProduct()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is error getlistusers` + err.Error()))
+		log.Fatal("this is erro product package ")
+		return
+	}
+
+	js, err := json.Marshal(product)
+	if err != nil {
+		fmt.Println("erroring while marshal product")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is success error`))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(js)
+}
+
+func (c Controler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+
+	value := r.URL.Query()
+	id := value["id"][0]
+
+	if err := c.Store.ProductStorage.DeleteProduct(id); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is erroing delete product`))
+		fmt.Println("error this is deleteproducts")
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`this is erroing delete product` + id))
+}
+
+
+func (c Controler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	product := structfortable.Products{}
 	c.Store.ProductStorage.UPdateProduct(product)
-}
 
-func GetProductInfo() structfortable.Products {
-	var idStr string
-	fmt.Println("enter idStr")
-	fmt.Scan(&idStr)
 
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		fmt.Println("error  getproductinfo idStr")
+	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
+		fmt.Println("error decoding update product request body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error decoding request product body: " + err.Error()))
+		return
 	}
 
-	var (
-		name  string
-		price int
-	)
-
-	fmt.Println("enter name")
-	fmt.Scan(&name)
-
-	fmt.Println("enter price")
-	fmt.Scan(&price)
-
-	return structfortable.Products{
-		ID:    id,
-		Name:  name,
-		Price: price,
+	if err := c.Store.ProductStorage.UPdateProduct(product); err != nil {
+		fmt.Println("error updating product:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error updating product: " + err.Error()))
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("successful user update"))
 }
+

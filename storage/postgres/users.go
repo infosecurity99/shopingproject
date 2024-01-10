@@ -28,7 +28,7 @@ func (r usersRepo) Insert(user structfortable.Users) (string, error) {
 }
 
 // getby id  function users
-func (r usersRepo) GetByIdUser(id uuid.UUID) (structfortable.Users, error) {
+func (r usersRepo) GetByIdUser(id string) (structfortable.Users, error) {
 	user := structfortable.Users{}
 	row := r.DB.QueryRow(`select id, firstname, lastname, email, phone from users where id = $1`, id)
 
@@ -60,7 +60,7 @@ func (r usersRepo) GetListUser() ([]structfortable.Users, error) {
 }
 
 //delete funct   for delete  user
-func (r usersRepo) Deleteusers(id uuid.UUID) error {
+func (r usersRepo) Deleteusers(id string) error {
 
 	_, err := r.DB.Exec(`delete from users where id=$1`, id)
 	if err != nil {

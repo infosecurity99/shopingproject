@@ -2,134 +2,137 @@ package controler
 
 import (
 	"conectionmyprojectpath/structfortable"
+	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/google/uuid"
+	"net/http"
 )
 
-//create insert  function
-func (c Controler) CreateInsert() {
-	user := GetInfoUsers()
+func (c Controler) Users(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		c.CreateInsert(w, r)
+	case http.MethodGet:
+		values := r.URL.Query()
+		_, ok := values["id"]
+		if ok {
+			c.GetByIdUserCreate(w, r)
+		} else {
+			c.GetListUser(w, r)
+		}
+	case http.MethodDelete:
+		c.DeleteUser(w, r)
+	case http.MethodPut:
+		//c.UpdateUsers(w, r)
+	default:
+		fmt.Println("this is not case ")
+	}
+}
 
-	id, err := c.Store.UsersStorage.Insert(user)
-	if err != nil {
-		fmt.Println("errrothis insert create    users.go/controler")
+//create insert  function
+func (c Controler) CreateInsert(w http.ResponseWriter, r *http.Request) {
+
+	users := structfortable.Users{}
+
+	if err := json.NewDecoder(r.Body).Decode(&users); err != nil {
+		fmt.Println([]byte(`this is while erroring newdecoder problame` + err.Error()))
 		return
 	}
 
-	fmt.Println("users id", id)
+	id, err := c.Store.UsersStorage.Insert(users)
+	if err != nil {
+		fmt.Println("errrothis insert create    users.go/controler")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this database add  new  data ` + id))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(`this is creatStatus created` + id))
 }
 
 //create getbyid users
 
-func (c Controler) GetByIdUserCreate() {
-	var idStr string
-	fmt.Println("enter idStr")
-	fmt.Scan(&idStr)
+func (c Controler) GetByIdUserCreate(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
-	id, err := uuid.Parse(idStr)
+	users, err := c.Store.UsersStorage.GetByIdUser(id)
 	if err != nil {
-		fmt.Println("this is getbyidcretea .go  error  id")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is succus this id ` + id))
 		return
 	}
 
-	user, err := c.Store.UsersStorage.GetByIdUser(id)
+	js, err := json.Marshal(users)
+	if err != nil {
+		fmt.Println("Error while marshaling data ", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Erro while marshaling " + err.Error()))
+		return
+	}
 
-	fmt.Println(user)
+	w.WriteHeader(200)
+	w.Write(js)
 }
 
 //get list users
-func (c Controler) GetListUser() {
+func (c Controler) GetListUser(w http.ResponseWriter, r *http.Request) {
 
 	users, err := c.Store.UsersStorage.GetListUser()
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is error getlistusers` + err.Error()))
 		log.Fatal("this is erro getlistuser package ")
+		return
 	}
 
-	fmt.Println(users)
+	js, err := json.Marshal(users)
+	if err != nil {
+		fmt.Println("erroring while marshal users")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is success error`))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(js)
+
 }
 
 //delete list users
-func (c Controler) DeleteUser() {
-	var idStr string
-	fmt.Printf("enter str for delete by user")
-	fmt.Scan(&idStr)
-
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("this is error id str", id)
+func (c Controler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
+	if err := c.Store.UsersStorage.Deleteusers(id); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is id success delete`))
+		fmt.Println("delete this database ", id)
+		return
 	}
-	c.Store.UsersStorage.Deleteusers(id)
-	fmt.Println("delete this database ", id)
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(`this is sucess  delete`))
+
 }
-func (c Controler) UpdateUsers() {
-	user := GetInfoUsersforUpdate()
-	c.Store.UsersStorage.UpdateUser(user)
+func (c Controler) UpdateUsers(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("successful update this data ")
-}
-//selectall
-func GetInfoUsers() structfortable.Users {
+	userToUpdate := structfortable.Users{}
 
-	var (
-		firstname string
-		lastname  string
-		phone     string
-		email     string
-	)
-	fmt.Printf("enter first name")
-	fmt.Scan(&firstname)
-
-	fmt.Printf("enter last name")
-	fmt.Scan(&lastname)
-
-	fmt.Printf("enter phone")
-	fmt.Scan(&phone)
-
-	fmt.Printf("enter email")
-	fmt.Scan(&email)
-
-	return structfortable.Users{
-		FirstName: firstname,
-		LastName:  lastname,
-		Email:     email,
-		Phone:     phone,
-	}
-}
-//getinfoforupdateusers
-func GetInfoUsersforUpdate() structfortable.Users {
-	var idStr string
-	fmt.Printf("enter id  for update")
-	fmt.Scan(&idStr)
-	var (
-		firstname string
-		lastname  string
-		phone     string
-		email     string
-	)
-	fmt.Printf("enter first name")
-	fmt.Scan(&firstname)
-
-	fmt.Printf("enter last name")
-	fmt.Scan(&lastname)
-
-	fmt.Printf("enter phone")
-	fmt.Scan(&phone)
-
-	fmt.Printf("enter email")
-	fmt.Scan(&email)
-
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("this is eror", err.Error())
+	if err := json.NewDecoder(r.Body).Decode(&userToUpdate); err != nil {
+		fmt.Println("error decoding update user request body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error decoding request body: " + err.Error()))
+		return
 	}
 
-	return structfortable.Users{
-		ID:        id,
-		FirstName: firstname,
-		LastName:  lastname,
-		Email:     email,
-		Phone:     phone,
+	if err := c.Store.UsersStorage.UpdateUser(userToUpdate); err != nil {
+		fmt.Println("error updating user:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error updating user: " + err.Error()))
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("successful user update"))
 }

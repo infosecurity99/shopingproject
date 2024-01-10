@@ -20,16 +20,16 @@ func NewOrderRepo(db *sql.DB) orderRepo {
 }
 
 //inser
-func (r orderRepo) InsertOrder(amount int, user_id uuid.UUID) error {
+func (r orderRepo) InsertOrder(order structfortable.Orders) (string, error) {
 	id := uuid.New()
 	createdAt := time.Now()
 
-	_, err := r.DB.Exec(`INSERT INTO orders (id, amount, user_id, create_at) VALUES ($1, $2, $3, $4)`, id, amount, user_id, createdAt)
+	_, err := r.DB.Exec(`INSERT INTO orders (id, amount, userid, createat) VALUES ($1, $2, $3, $4)`, id, order.Amount, order.UserId, createdAt)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id.String(), nil
 }
 
 //get by id
@@ -37,7 +37,7 @@ func (r orderRepo) GetByIdOrder(id uuid.UUID) (structfortable.Orders, error) {
 	order := structfortable.Orders{}
 	rows := r.DB.QueryRow(`select from orders where id=$1`, id)
 
-	if err := rows.Scan(&order.ID, &order.Amount, &order.User_Id, &order.Create_At); err != nil {
+	if err := rows.Scan(&order.ID, &order.Amount, &order.UserId, &order.CreateAt); err != nil {
 		return structfortable.Orders{}, err
 	}
 	return order, nil
@@ -55,7 +55,7 @@ func (r orderRepo) SelectOrdresulter() ([]structfortable.Orders, error) {
 
 	for rows.Next() {
 		order := structfortable.Orders{}
-		if err := rows.Scan(&order.ID, &order.Amount, &order.User_Id, &order.Create_At); err != nil {
+		if err := rows.Scan(&order.ID, &order.Amount, &order.UserId, &order.CreateAt); err != nil {
 			log.Fatal(err.Error())
 		}
 		orders = append(orders, order)
@@ -75,11 +75,13 @@ func (r orderRepo) DeleteOrder(id uuid.UUID) error {
 	return nil
 }
 
+/*
 //update
 func (r orderRepo) UpdateOrder(order structfortable.Orders) error {
-	_, err := r.DB.Exec(`update orders set amount = $1, user_id = $2 where id = $3`, order.Amount, order.User_Id, order.ID)
+	_, err := r.DB.Exec(`update orders set amount = $1, user_id = $2 where id = $3`, order.Amount, order.UserId, order.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
+*/
