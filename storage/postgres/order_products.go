@@ -63,7 +63,7 @@ func (r orderproductRepo) GetListOrderProduct() ([]structfortable.OrderProducts,
 }
 
 //delete orderproduct
-func (r orderproductRepo) DeleteOrderProducts(id uuid.UUID) error {
+func (r orderproductRepo) DeleteOrderProducts(id string) error {
 	_, err := r.DB.Exec(`delete from order_products`)
 	if err != nil {
 		return err

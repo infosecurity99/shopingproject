@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 func (c Controler) OrderProduct(w http.ResponseWriter, r *http.Request) {
@@ -23,9 +21,9 @@ func (c Controler) OrderProduct(w http.ResponseWriter, r *http.Request) {
 			c.GetListOrderProducts(w, r)
 		}
 	case http.MethodDelete:
-		//c.DeleteUser(w, r)
+		c.DeleteUser(w, r)
 	case http.MethodPut:
-		//c.UpdateUsers(w, r)
+		c.UpdateUsers(w, r)
 	default:
 		fmt.Println("this is not case ")
 	}
@@ -102,35 +100,24 @@ func (c Controler) DeleteOrderProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`this is sucess  delete`))
 }
 
-func (c Controler) UpdateOrderProducts() {
-	orderproduct := getInfoOrderProduct()
-	if err := c.Store.OrderProductStorage.UpdateOrderProduct(orderproduct); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("success full   orderproduct")
-}
+func (c Controler) UpdateOrderProducts(w http.ResponseWriter, r *http.Request) {
 
-func getInfoOrderProduct() structfortable.OrderProducts {
-	var idStr string
-	fmt.Println("enter idStr")
-	fmt.Scan(idStr)
+	orderproduct := structfortable.Users{}
 
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("error this is orderproduct")
+	if err := json.NewDecoder(r.Body).Decode(&orderproduct); err != nil {
+		fmt.Println("error decoding update order product request body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error decoding request body: " + err.Error()))
+		return
 	}
 
-	price := 0
-	fmt.Println("enter price")
-	fmt.Scan(&price)
-
-	quantity := 0
-	fmt.Println("enter quantity")
-	fmt.Scan(&quantity)
-
-	return structfortable.OrderProducts{
-		ID:       id,
-		Price:    price,
-		Quantity: quantity,
+	if err := c.Store.UsersStorage.UpdateUser(orderproduct); err != nil {
+		fmt.Println("error updating order product:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error updating order product: " + err.Error()))
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("successful order product update"))
 }

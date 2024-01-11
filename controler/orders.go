@@ -50,67 +50,85 @@ func (c Controler) Createorders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("successful order insertion"+id))
+	w.Write([]byte("successful order insertion" + id))
 }
 
 func (c Controler) GetOrderById(w http.ResponseWriter, r http.Request) {
-	var idStr string
-	fmt.Println("Enter user id: ")
-	fmt.Scan(&idStr)
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("This id is not uuid type ", err.Error())
-	}
+	values := r.URL.Query()
+	id := values["id"][0]
+
 	order, err := c.Store.OrderStorage.GetByIdOrder(id)
 	if err != nil {
-		log.Fatal("Error while get order by id err: ", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is succus this id ` + id))
+		return
 	}
-	fmt.Println(order)
+
+	js, err := json.Marshal(order)
+	if err != nil {
+		fmt.Println("Error while marshaling data ", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Erro while marshaling " + err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(js)
 }
 
 func (c Controler) GetOrdersList(w http.ResponseWriter, r http.Request) {
-	orders, err := c.Store.OrderStorage.SelectOrdresulter()
+
+	order, err := c.Store.OrderStorage.SelectOrdresulter()
 	if err != nil {
-		log.Fatal("Error while get orders list: ", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is error order` + err.Error()))
+		log.Fatal("this is erro order package ")
+		return
 	}
-	fmt.Println(orders)
+
+	js, err := json.Marshal(order)
+	if err != nil {
+		fmt.Println("erroring while marshal order")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is success error`))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(js)
 }
 
-/*
 func (c Controler) UpdateOrder(w http.ResponseWriter, r http.Request) {
-	orders := ForUpdateOrders()
-	if err := c.Store.OrderStorage.UpdateOrder(orders); err != nil {
-		log.Fatal("Error while updating order ", err.Error())
+	order := structfortable.Orders{}
+
+	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		fmt.Println("error decoding update order request body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error decoding request body: " + err.Error()))
+		return
 	}
-	fmt.Println("order updated succesfully...")
-}*/
-func ForUpdateOrders() structfortable.Orders {
-	var amount int
-	fmt.Println("Enter amount: ")
-	fmt.Scan(&amount)
-	var idStr string
-	fmt.Println("Enter user id: ")
-	fmt.Scan(&idStr)
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("This id is not uuid type ", err.Error())
+
+	if err := c.Store.OrderStorage.UpdateOrder(order); err != nil {
+		fmt.Println("error updating orders:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error updating orders: " + err.Error()))
+		return
 	}
-	return structfortable.Orders{
-		Amount: amount,
-		UserId: id,
-	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("successful ordrer update"))
 }
 
 func (c Controler) DeleteOrder(w http.ResponseWriter, r http.Request) {
-	var idStr string
-	fmt.Println("Enter user id: ")
-	fmt.Scan(&idStr)
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		log.Fatal("This id is not uuid type ", err.Error())
-	}
+	values := r.URL.Query()
+	id := values["id"][0]
 	if err := c.Store.OrderStorage.DeleteOrder(id); err != nil {
-		log.Fatal("Error while delete order...")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`this is id success delete`))
+		fmt.Println("delete this database ", id)
+		return
 	}
-	fmt.Println("Order succesfully deleted...")
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(`this is sucess  delete`))
 }

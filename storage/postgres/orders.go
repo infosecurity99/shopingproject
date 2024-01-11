@@ -33,7 +33,7 @@ func (r orderRepo) InsertOrder(order structfortable.Orders) (string, error) {
 }
 
 //get by id
-func (r orderRepo) GetByIdOrder(id uuid.UUID) (structfortable.Orders, error) {
+func (r orderRepo) GetByIdOrder(id string) (structfortable.Orders, error) {
 	order := structfortable.Orders{}
 	rows := r.DB.QueryRow(`select from orders where id=$1`, id)
 
@@ -47,7 +47,7 @@ func (r orderRepo) GetByIdOrder(id uuid.UUID) (structfortable.Orders, error) {
 func (r orderRepo) SelectOrdresulter() ([]structfortable.Orders, error) {
 	orders := []structfortable.Orders{}
 
-	rows, err := r.DB.Query(`SELECT * FROM orders`)
+	rows, err := r.DB.Query(`select * from orders`)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (r orderRepo) SelectOrdresulter() ([]structfortable.Orders, error) {
 
 //delete
 
-func (r orderRepo) DeleteOrder(id uuid.UUID) error {
+func (r orderRepo) DeleteOrder(id string) error {
 	_, err := r.DB.Exec(`DELETE FROM orders WHERE id = $1`, id)
 	if err != nil {
 		return err
@@ -75,7 +75,6 @@ func (r orderRepo) DeleteOrder(id uuid.UUID) error {
 	return nil
 }
 
-/*
 //update
 func (r orderRepo) UpdateOrder(order structfortable.Orders) error {
 	_, err := r.DB.Exec(`update orders set amount = $1, user_id = $2 where id = $3`, order.Amount, order.UserId, order.ID)
@@ -84,4 +83,3 @@ func (r orderRepo) UpdateOrder(order structfortable.Orders) error {
 	}
 	return nil
 }
-*/
