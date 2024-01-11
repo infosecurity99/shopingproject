@@ -67,7 +67,7 @@ func (c Controler) GetByIdUserCreate(w http.ResponseWriter, r *http.Request) {
 	js, err := json.Marshal(users)
 	if err != nil {
 		fmt.Println("Error while marshaling data ", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Erro while marshaling " + err.Error()))
 		return
 	}

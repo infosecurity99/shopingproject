@@ -18,23 +18,23 @@ func NewOrderProduct(db *sql.DB) orderproductRepo {
 }
 
 //insert orderproduct
-func (r orderproductRepo) CreateOrderProducts(Price int, Quantity int) error {
+func (r orderproductRepo) CreateOrderProducts(orderproduct structfortable.OrderProducts) (string, error) {
 	id := uuid.New()
-	_, err := r.DB.Exec(`insert into order_products  values ($1, $2, $3 )`, id, Quantity, Price)
+	_, err := r.DB.Exec(`insert into order_products  values ($1, $2, $3 )`, id, orderproduct.Quantity, orderproduct.Price)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id.String(), nil
 }
 
 //getbyid  orderproduct
-func (r orderproductRepo) GetByIdorderProduct(id uuid.UUID) (structfortable.OrderProducts, error) {
+func (r orderproductRepo) GetByIdorderProduct(id string) (structfortable.OrderProducts, error) {
 	orderproduct := structfortable.OrderProducts{}
 
 	row := r.DB.QueryRow(`select from order_products where id=$1`, id)
 
-	err := row.Scan(&orderproduct.ID, &orderproduct.Quantity, &orderproduct.Price)
+	err := row.Scan(&orderproduct.ID, &orderproduct.ProductId, &orderproduct.OrderId, &orderproduct.Quantity, &orderproduct.Price)
 	if err != nil {
 		return structfortable.OrderProducts{}, nil
 	}

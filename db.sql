@@ -8,7 +8,7 @@ CREATE TABLE users (
 CREATE TABLE orders (
     id UUID PRIMARY KEY NOT NULL,
     amount INT NOT NULL,
-    userid UUID REFERENCES users(ID),
+    userid UUID REFERENCES users(id),
     createat TIMESTAMP NOT NULL 
 );
 CREATE TABLE products (
@@ -20,6 +20,6 @@ CREATE TABLE order_products (
     id UUID PRIMARY KEY NOT NULL,
     quantity INT NOT NULL,
     price INT NOT NULL, 
-    productid UUID REFERENCES products(ID),
-    orderid UUID REFERENCES orders(ID)
+    productid UUID REFERENCES products(id),
+    orderid UUID REFERENCES orders(id)
 );
