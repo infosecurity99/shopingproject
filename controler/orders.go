@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 func (c Controler) Orders(w http.ResponseWriter, r *http.Request) {
